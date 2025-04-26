@@ -15,7 +15,7 @@ out vec3 vWorldPos;
 
 out uint vMaterial;
 
-// #define MOD_PLANT_DETECTION
+#define MOD_PLANT_DETECTION
 
 #include "/settings/GlobalSettings.glsl"
 #include "/libs/Uniform.glsl"

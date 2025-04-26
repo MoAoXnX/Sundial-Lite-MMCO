@@ -1,4 +1,4 @@
-const vec3 ozoneAbsorption = vec3(2.1e-6,5.0e-6,0.2e-6);
+const vec3 ozoneAbsorption = vec3(5.1e-6,5.4e-6,0.2e-6);
 const vec3 pureRayleighBeta = vec3(5.2e-6, 12.1e-6, 29.6e-6);
 const vec3 rayleighBeta = pureRayleighBeta + ozoneAbsorption;
 const float mieBeta = 2.1e-5;
@@ -28,7 +28,7 @@ vec4 planetIntersectionData(vec3 worldPos, vec3 worldDir) {
 
 float rayleighPhase(float cosAngle) {
     const float rayleighFactor = (1.0 / (4.0 * PI)) * (8.0 / 10.0);
-    return 7.0 / 5.0 * rayleighFactor + (0.5 * rayleighFactor * cosAngle);
+    return 18.0 / 5.0 * rayleighFactor + (0.5 * rayleighFactor * cosAngle);
 }
 
 float miePhase(float cosAngle, float g, float g2) {
@@ -86,6 +86,7 @@ void sampleInScatteringDoubleSide(float originHeight, vec2 c, vec2 cExpH, float 
 }
 
 vec3 singleAtmosphereScattering(vec3 skyLightColor, vec3 worldPos, vec3 worldDir, vec3 sunDir, vec4 intersectionData, float sunLightStrength, out vec3 atmosphere) {
+    float sunsetBoostFactor = 1.0;
     atmosphere = vec3(0.0);
     vec3 result = skyLightColor;
 
@@ -127,6 +128,16 @@ vec3 singleAtmosphereScattering(vec3 skyLightColor, vec3 worldPos, vec3 worldDir
             float sunCosAngle = dot(worldDir, sunDir);
             float sunRayleigh = rayleighPhase(sunCosAngle);
             float sunMie = miePhase(sunCosAngle);
+            float sunHeight = sunDir.y;
+            float twilightRange = 0.15;
+            float twilightHeight = sunHeight + twilightRange;
+            float sunsetBoost = 
+            exp(-sunHeight * sunHeight * 200.0) * 0.0 + 
+            exp(-twilightHeight * twilightHeight * 380.0) * 2.0;
+            float sunsetBoostFactor = 1.0 + clamp(sunsetBoost, 0.0, 3.0);
+            vec3 viewToSun = normalize(sunDir - worldDir);
+            float azimuthFactor = pow(max(dot(viewToSun, sunDir), 0.0), 4.0);
+            sunsetBoost *= mix(0.3, 1.0, azimuthFactor);
             float moonRayleigh = rayleighPhase(-sunCosAngle) * nightBrightness;
             float moonMie = miePhase(-sunCosAngle) * nightBrightness;
 
@@ -172,10 +183,13 @@ vec3 singleAtmosphereScattering(vec3 skyLightColor, vec3 worldPos, vec3 worldDir
                 prevMieInScattering = currMieInScattering;
             }
 
-            vec3 totalInScattering = totalRayleighInScattering * pureRayleighBeta + totalMieInScattering * rainyMieBeta;
-            totalInScattering *= 0.5;
+            vec3 totalInScattering = (totalRayleighInScattering * pureRayleighBeta + totalMieInScattering * rainyMieBeta);
+            totalInScattering *= 0.5 * sunsetBoostFactor;
+            
+            
 
             atmosphere = totalInScattering * sunLightStrength;
+            
 
             result += atmosphere;
         }
@@ -255,6 +269,7 @@ vec3 atmosphereScatteringUp(float lightHeight, float sunLightStrength) {
 
         vec3 totalInScattering = totalRayleighInScattering * pureRayleighBeta + totalMieInScattering * rainyMieBeta;
         totalInScattering *= 0.5;
+        
 
         result = totalInScattering * sunLightStrength;
     }

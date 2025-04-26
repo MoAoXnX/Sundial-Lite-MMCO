@@ -131,7 +131,7 @@ option.SUNLIGHT_BRIGHTNESS=Sun light brightness
 option.NIGHT_BRIGHTNESS=Night brightness
 option.NIGHT_VISION_BRIGHTNESS=Night vision brightness
 # LightColor
-option.LIGHT_BRIGHTNESS=Light brightness
+option.LIGHT_BRIGHTNESS=Min brightness
 option.LIGHT_COLOR_R=Light color: red
 option.LIGHT_COLOR_G=Light color: green
 option.LIGHT_COLOR_B=Light color: blue

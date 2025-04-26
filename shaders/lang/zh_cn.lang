@@ -139,7 +139,7 @@ option.SUNLIGHT_BRIGHTNESS=日光亮度
 option.NIGHT_BRIGHTNESS=夜晚亮度
 option.NIGHT_VISION_BRIGHTNESS=夜视亮度
 # LightColor
-option.LIGHT_BRIGHTNESS=光源亮度
+option.LIGHT_BRIGHTNESS=基础亮度
 option.LIGHT_COLOR_R=光源颜色：红
 option.LIGHT_COLOR_G=光源颜色：绿
 option.LIGHT_COLOR_B=光源颜色：蓝

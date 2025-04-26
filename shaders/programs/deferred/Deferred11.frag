@@ -291,8 +291,14 @@ void main() {
         #ifndef FULL_REFLECTION
             diffuseWeight = 1.0 - (1.0 - diffuseWeight) * sqrt(clamp(gbufferData.smoothness - (1.0 - gbufferData.smoothness) * (1.0 - 0.6666 * gbufferData.metalness), 0.0, 1.0));
         #endif
-        finalColor.rgb = vec3(BASIC_LIGHT + NIGHT_VISION_BRIGHTNESS * nightVision);
-        finalColor.rgb += pow(gbufferData.lightmap.x, 4.4) * lightColor;
+        const float minBrightness = 0.04;
+        vec3 baseLight = vec3(BASIC_LIGHT);
+        baseLight = mix(
+        baseLight,
+        max(baseLight, vec3(minBrightness)),
+        LIGHT_BRIGHTNESS
+        );
+        finalColor.rgb = baseLight + pow(gbufferData.lightmap.x, 4.4) * lightColor;
         #ifdef SHADOW_AND_SKY
             finalColor.rgb += pow(gbufferData.lightmap.y, 2.2) * (skyColorUp + sunColor) * (worldNormal.y * 0.4 + 0.6);
         #endif

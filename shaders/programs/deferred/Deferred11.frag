@@ -294,7 +294,7 @@ void main() {
         finalColor.rgb = vec3(BASIC_LIGHT + NIGHT_VISION_BRIGHTNESS * nightVision);
         finalColor.rgb += pow(gbufferData.lightmap.x, 4.4) * lightColor;
         #ifdef SHADOW_AND_SKY
-            finalColor.rgb += pow(gbufferData.lightmap.y, 2.2) * (skyColorUp + sunColor) * (worldNormal.y * 0.4 + 0.6);
+            finalColor.rgb += pow(gbufferData.lightmap.y, 2.2) * (skyColorUp + sunColor) * (worldNormal.y * 0.5 + 0.6);
         #endif
         float NdotV = clamp(dot(viewDir, -gbufferData.normal), 0.0, 1.0);
         vec3 diffuseAbsorption = (1.0 - gbufferData.metalness) * diffuseAbsorptionWeight(NdotV, gbufferData.smoothness, gbufferData.metalness, n, k);

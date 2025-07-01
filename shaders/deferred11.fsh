@@ -1,6 +1,6 @@
 #version 330 compatibility
 
 #define SHADOW_AND_SKY
-#define BASIC_LIGHT vec3(0.07, 0.08, 0.1)
+#define BASIC_LIGHT vec3(0.01, 0.02, 0.035)
 
 #include "/programs/deferred/Deferred11.frag"

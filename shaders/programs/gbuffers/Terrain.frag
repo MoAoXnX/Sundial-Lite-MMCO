@@ -35,8 +35,9 @@ void main() {
     ivec2 textureResolutionFixed = (0x3FC00000 - floatBitsToInt(vec2(tangentLenInv, abs(viewTangent.w)) * atlasTexelSize)) >> 23;
     textureResolutionFixed = ivec2(1) << textureResolutionFixed;
     int maxTextureResolution = max(textureResolutionFixed.x, textureResolutionFixed.y);
-    float textureResolutionInv = uintBitsToFloat(0x7F000000u - floatBitsToUint(maxTextureResolution));
-    ivec2 baseCoordI = ivec2(floor(texlmcoord.st * atlasTexSize * textureResolutionInv)) * maxTextureResolution;
+    float textureResolutionInv = uintBitsToFloat(0x7F000000u - floatBitsToUint(float(maxTextureResolution)));
+    vec2 texelCoord = texlmcoord.st * atlasTexSize;
+    ivec2 baseCoordI = ivec2(floor(texelCoord * textureResolutionInv)) * maxTextureResolution;
 
     vec3 viewPos = screenToViewPos(gl_FragCoord.st * texelSize, gl_FragCoord.z);
     float viewDepthInv = inversesqrt(dot(viewPos, viewPos));
@@ -44,14 +45,19 @@ void main() {
     float parallaxOffset = 0.0;
     vec2 texcoord = texlmcoord.st;
     #ifdef PARALLAX
-        vec3 textureViewer = -viewDir * tbnMatrix;
-        textureViewer.xy *= textureResolutionFixed * textureResolutionInv;
-        #ifdef VOXEL_PARALLAX
-            vec3 parallaxTexNormal = vec3(0.0, 0.0, 1.0);
-            texcoord = perPixelParallax(texlmcoord.st, textureViewer, atlasTexSize, baseCoordI, maxTextureResolution, true, parallaxTexNormal, parallaxOffset);
-        #else
-            texcoord = calculateParallax(texlmcoord.st, textureViewer, atlasTexSize, atlasTexelSize, baseCoordI, maxTextureResolution, true, parallaxOffset);
+        vec3 parallaxTexNormal = vec3(0.0, 0.0, 1.0);
+        #if WATER_TYPE == 0 && defined CAULDRON_WAVE
+            if ((blockData.x >> 1) != MAT_WATER)
         #endif
+        {
+            vec3 textureViewer = -viewDir * tbnMatrix;
+            textureViewer.xy *= textureResolutionFixed * textureResolutionInv;
+            #ifdef VOXEL_PARALLAX
+                texcoord = perPixelParallax(texlmcoord.st, textureViewer, atlasTexSize, atlasTexelSize, baseCoordI, maxTextureResolution, true, parallaxTexNormal, parallaxOffset);
+            #else
+                texcoord = calculateParallax(texelCoord, textureViewer, atlasTexelSize, baseCoordI, maxTextureResolution, true, parallaxOffset);
+            #endif
+        }
     #endif
     vec2 baseCoord = vec2(baseCoordI) * atlasTexelSize;
 
@@ -67,7 +73,8 @@ void main() {
     if (albedoData.w < alphaTestRef) discard;
 
     #ifdef MC_NORMAL_MAP
-        vec4 normalData = textureGrad(normals, texcoord, texGradX, texGradY);
+        vec2 grad = min(abs(texGradX) , abs(texGradY));
+        vec4 normalData = textureGrad(normals, texcoord, grad, grad);
         #ifdef LABPBR_TEXTURE_AO
             albedoData.rgb *= pow(normalData.b, 1.0 / 2.2);
         #endif
@@ -105,7 +112,7 @@ void main() {
         }
         rawData.emissive += emissive;
     #endif
-    bool isCauldronWater = rawData.materialID == MAT_CAULDRON && abs(color.r - color.b) > 1e-5;
+    bool isCauldronWater = rawData.materialID == MAT_WATER;
     rawData.smoothness += float(rawData.smoothness < 1e-3 && isCauldronWater);
     rawData.albedo.rgb *= 1.0 - 0.5 * float(isCauldronWater);
 
@@ -119,7 +126,7 @@ void main() {
         rawData.porosity = 0.0;
     #endif
 
-    rawData.porosity += 
+    rawData.porosity +=
         (1.0 - clamp(rawData.porosity * 1e+3, 0.0, 1.0)) *
         (0.5 * float(rawData.materialID == MAT_GRASS) + 0.7 * float(rawData.materialID == MAT_LEAVES || rawData.materialID == MAT_GLOWING_BERRIES));
 
@@ -153,7 +160,7 @@ void main() {
         true
         #ifdef PARALLAX_BASED_NORMAL
             #ifdef PARALLAX
-                && (parallaxOffset == 0.0
+                && (rawData.parallaxOffset == 0.0
                 #ifdef VOXEL_PARALLAX
                     || parallaxTexNormal.z > 0.5
                 #endif
@@ -191,13 +198,11 @@ void main() {
         rawData.normal = normalize(tbnMatrix * rawData.normal);
 
         float NdotV = dot(rawData.normal, viewDir);
-        if (NdotV < 1e-6) {
-            vec3 edgeNormal = rawData.normal - viewDir * NdotV;
-            float weight = 1.0 - NdotV;
-            weight = sin(min(weight, PI / 2.0));
-            weight = clamp(min(max(NdotV, dot(viewDir, tbnMatrix[2])), 1.0 - weight), 0.0, 1.0);
-            rawData.normal = viewDir * weight + edgeNormal * inversesqrt(dot(edgeNormal, edgeNormal) / (1.0 - weight * weight));
-        }
+        vec3 edgeNormal = rawData.normal - viewDir * NdotV;
+        float curveStart = dot(viewDir, tbnMatrix[2]);
+        float weight = clamp(curveStart - curveStart * exp(NdotV / curveStart - 1.0), 0.0, 1.0);
+        weight = max(NdotV, curveStart) - weight;
+        rawData.normal = viewDir * weight + edgeNormal * inversesqrt(dot(edgeNormal, edgeNormal) / (1.0 - weight * weight));
     }
     else {
         #ifdef VOXEL_PARALLAX
@@ -206,13 +211,13 @@ void main() {
             #endif
         #else
             #ifdef SMOOTH_PARALLAX
-                vec3 parallaxNormal = heightBasedNormal(normals, texcoord, baseCoord, atlasTexSize, atlasTexelOffset, maxTextureResolution, true);
+                rawData.normal = heightBasedNormal(normals, texcoord, baseCoord, atlasTexSize, atlasTexelOffset, maxTextureResolution, true);
             #else
                 const float eps = 1e-4;
-                float rD = textureGrad(normals, calculateOffsetCoord(texcoord + vec2(eps * tileCoordSize.x, 0.0), baseCoord, tileCoordSize, atlasTiles), texGradX, texGradY).a;
-                float lD = textureGrad(normals, calculateOffsetCoord(texcoord - vec2(eps * tileCoordSize.x, 0.0), baseCoord, tileCoordSize, atlasTiles), texGradX, texGradY).a;
-                float uD = textureGrad(normals, calculateOffsetCoord(texcoord + vec2(0.0, eps * tileCoordSize.y), baseCoord, tileCoordSize, atlasTiles), texGradX, texGradY).a;
-                float dD = textureGrad(normals, calculateOffsetCoord(texcoord - vec2(0.0, eps * tileCoordSize.y), baseCoord, tileCoordSize, atlasTiles), texGradX, texGradY).a;
+                float rD = textureGrad(normals, calculateOffsetCoord(texcoord + vec2(eps * tileCoordSize.x, 0.0), baseCoord, tileCoordSize, atlasTiles), grad, grad).a;
+                float lD = textureGrad(normals, calculateOffsetCoord(texcoord - vec2(eps * tileCoordSize.x, 0.0), baseCoord, tileCoordSize, atlasTiles), grad, grad).a;
+                float uD = textureGrad(normals, calculateOffsetCoord(texcoord + vec2(0.0, eps * tileCoordSize.y), baseCoord, tileCoordSize, atlasTiles), grad, grad).a;
+                float dD = textureGrad(normals, calculateOffsetCoord(texcoord - vec2(0.0, eps * tileCoordSize.y), baseCoord, tileCoordSize, atlasTiles), grad, grad).a;
                 rawData.normal = vec3((lD - rD), (dD - uD), step(abs(lD - rD) + abs(dD - uD), 1e-3));
             #endif
             rawData.normal = mix(rawData.normal, rippleNormal, wetStrength);

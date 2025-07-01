@@ -189,7 +189,6 @@ vec3 singleAtmosphereScattering(vec3 skyLightColor, vec3 worldPos, vec3 worldDir
             
 
             atmosphere = totalInScattering * sunLightStrength;
-            
 
             result += atmosphere;
         }
@@ -269,7 +268,6 @@ vec3 atmosphereScatteringUp(float lightHeight, float sunLightStrength) {
 
         vec3 totalInScattering = totalRayleighInScattering * pureRayleighBeta + totalMieInScattering * rainyMieBeta;
         totalInScattering *= 0.5;
-        
 
         result = totalInScattering * sunLightStrength;
     }

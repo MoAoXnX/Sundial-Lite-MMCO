@@ -194,8 +194,9 @@ void main() {
         #endif
 
         vec2 albedoTexSize = vec2(textureSize(gtexture, 0));
-        vec2 atlasTexelSize = 1.0 / albedoTexSize;
-        ivec2 baseCoordI = ivec2(floor(texcoord * albedoTexSize / ENTITY_TEXTURE_RESOLUTION)) * ENTITY_TEXTURE_RESOLUTION;
+        vec2 atlasTexelSize = uintBitsToFloat(0x7F000000u - floatBitsToUint(albedoTexSize));
+        vec2 texelCoord = texcoord * albedoTexSize;
+        ivec2 baseCoordI = ivec2(floor(texelCoord / ENTITY_TEXTURE_RESOLUTION)) * ENTITY_TEXTURE_RESOLUTION;
         #if (defined ENTITY_PARALLAX && defined PARALLAX) || ANISOTROPIC_FILTERING_QUALITY > 0
             ivec2 textureResolutionFixed = (floatBitsToInt(textureScale * albedoTexSize) & 0x7FC00000) >> 22;
             textureResolutionFixed = ((textureResolutionFixed >> 1) + (textureResolutionFixed & 1)) - 0x0000007F;
@@ -215,10 +216,10 @@ void main() {
                     textureViewer.xy *= textureScale * parallaxScale;
                     #ifdef VOXEL_PARALLAX
                         texcoord = perPixelParallax(
-                            texcoord, textureViewer, albedoTexSize, baseCoordI, ENTITY_TEXTURE_RESOLUTION, clampCoord, parallaxTexNormal, parallaxOffset
+                            texcoord, textureViewer, albedoTexSize, atlasTexelSize, baseCoordI, ENTITY_TEXTURE_RESOLUTION, clampCoord, parallaxTexNormal, parallaxOffset
                         );
                     #else
-                        texcoord = calculateParallax(texcoord, textureViewer, albedoTexSize, atlasTexelSize, baseCoordI, ENTITY_TEXTURE_RESOLUTION, clampCoord, parallaxOffset);
+                        texcoord = calculateParallax(texelCoord, textureViewer, atlasTexelSize, baseCoordI, ENTITY_TEXTURE_RESOLUTION, clampCoord, parallaxOffset);
                     #endif
                     rawData.parallaxOffset = clamp(parallaxOffset * parallaxScale, 0.0, 1.0);
                 #endif
@@ -235,7 +236,8 @@ void main() {
             vec4 texAlbedo = textureGrad(gtexture, texcoord, texGradX, texGradY);
         #endif
         #ifdef MC_NORMAL_MAP
-            vec4 normalData = textureGrad(normals, texcoord, texGradX, texGradY);
+            vec2 grad = min(abs(texGradX) , abs(texGradY));
+            vec4 normalData = textureGrad(normals, texcoord, grad, grad);
             #ifdef LABPBR_TEXTURE_AO
                 texAlbedo.rgb *= pow(normalData.b, 1.0 / 2.2);
             #endif
@@ -318,7 +320,7 @@ void main() {
 
             #ifdef PARALLAX_BASED_NORMAL
                 #if defined ENTITY_PARALLAX && defined PARALLAX
-                    if (parallaxOffset > 0.0
+                    if (rawData.parallaxOffset > 0.0
                         #ifdef VOXEL_PARALLAX
                             && parallaxTexNormal.z < 0.5
                         #endif
@@ -327,9 +329,7 @@ void main() {
                             rawData.normal = tbnMatrix * parallaxTexNormal;
                         #else
                             #ifdef SMOOTH_PARALLAX
-                                vec3 parallaxNormal = heightBasedNormal(normals, texcoord, baseCoord, albedoTexSize, atlasTexelOffset, float(ENTITY_TEXTURE_RESOLUTION), clampCoord);
-                                rawData.normal = mix(parallaxNormal, rippleNormal, wetStrength);
-                                rawData.normal = normalize(tbnMatrix * rawData.normal);
+                                rawData.normal = heightBasedNormal(normals, texcoord, baseCoord, albedoTexSize, atlasTexelOffset, float(ENTITY_TEXTURE_RESOLUTION), clampCoord);
                             #else
                                 const float eps = 1e-4;
                                 vec2 coordrD = texcoord + vec2(eps * tileCoordSize.x, 0.0);
@@ -342,14 +342,14 @@ void main() {
                                     coorduD = calculateOffsetCoord(coorduD, baseCoord, tileCoordSize, atlasTiles);
                                     coorddD = calculateOffsetCoord(coorddD, baseCoord, tileCoordSize, atlasTiles);
                                 }
-                                float rD = textureGrad(normals, coordrD, texGradX, texGradY).a;
-                                float lD = textureGrad(normals, coordlD, texGradX, texGradY).a;
-                                float uD = textureGrad(normals, coorduD, texGradX, texGradY).a;
-                                float dD = textureGrad(normals, coorddD, texGradX, texGradY).a;
+                                float rD = textureGrad(normals, coordrD, grad, grad).a;
+                                float lD = textureGrad(normals, coordlD, grad, grad).a;
+                                float uD = textureGrad(normals, coorduD, grad, grad).a;
+                                float dD = textureGrad(normals, coorddD, grad, grad).a;
                                 rawData.normal = vec3((lD - rD), (dD - uD), step(abs(lD - rD) + abs(dD - uD), 1e-3));
-                                rawData.normal = mix(rawData.normal, rippleNormal, wetStrength);
-                                rawData.normal = normalize(tbnMatrix * rawData.normal);
                             #endif
+                            rawData.normal = mix(rawData.normal, rippleNormal, wetStrength);
+                            rawData.normal = normalize(tbnMatrix * rawData.normal);
                         #endif
                         rawData.normal = normalize(mix(rawData.geoNormal, rawData.normal, 1.0 / (1.0 + 4.0 * pow(dot(vec4(texGradX, texGradY), vec4(texGradX, texGradY)), 0.1))));
                     } else
@@ -369,14 +369,12 @@ void main() {
                 rawData.normal = mix(rawData.normal, rippleNormal, wetStrength);
                 rawData.normal = normalize(tbnMatrix * rawData.normal);
 
-                float NdotV = dot(rawData.normal, viewDir);
-                if (NdotV < 1e-6) {
-                    vec3 edgeNormal = rawData.normal - viewDir * NdotV;
-                    float weight = 1.0 - NdotV;
-                    weight = sin(min(weight, PI / 2.0));
-                    weight = clamp(min(max(NdotV, dot(viewDir, rawData.geoNormal)), 1.0 - weight), 0.0, 1.0);
-                    rawData.normal = viewDir * weight + edgeNormal * inversesqrt(dot(edgeNormal, edgeNormal) / (1.0 - weight * weight));
-                }
+                float NdotV = dot(rawData.normal, viewDir) * inversesqrt(dot(rawData.normal, rawData.normal));
+                vec3 edgeNormal = rawData.normal - viewDir * NdotV;
+                float curveStart = dot(viewDir, rawData.geoNormal);
+                float weight = clamp(curveStart - curveStart * exp(NdotV / curveStart - 1.0), 0.0, 1.0);
+                weight = max(NdotV, curveStart) - weight;
+                rawData.normal = viewDir * weight + edgeNormal * inversesqrt(dot(edgeNormal, edgeNormal) / (1.0 - weight * weight));
             }
         }
     }

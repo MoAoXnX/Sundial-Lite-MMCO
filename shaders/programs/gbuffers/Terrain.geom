@@ -43,9 +43,10 @@ void main() {
 
     #ifdef SKYLIGHT_FIX
         #ifdef SHADOW_AND_SKY
-            vec3 skyLightDir = dPosPerpY * (vTexlmCoord[0].w - vTexlmCoord[1].w) + dPosPerpX * (vTexlmCoord[1].w - vTexlmCoord[2].w);
+            float fixDirection = signI(vTexlmCoord[0].w + vTexlmCoord[1].w + vTexlmCoord[2].w - 1.5);
+            vec3 skyLightDir = fixDirection * (dPosPerpY * (vTexlmCoord[0].w - vTexlmCoord[1].w) + dPosPerpX * (vTexlmCoord[1].w - vTexlmCoord[2].w));
 
-            vec3 skyLightDirSigned = uintBitsToFloat((floatBitsToUint(skyLightDir) & 0x80000000u) | 0x3F800000u);
+            vec3 skyLightDirSigned = signI(skyLightDir);
             vec3 skyLightFixStrengthRaw = skyLightDir * step(vec3(1.8 / 15.0), abs(skyLightDir));
 
             vec3 skyLightFixStrengthAbs = abs(skyLightFixStrengthRaw);
@@ -57,15 +58,17 @@ void main() {
             vec3 maximumLightPos = skyLightDirSigned * ceil(maximumLightVertex - vec3(1e-3));
             float maximumLight = dot(maximumLightPos, skyLightFixStrength);
 
-            vec4 minimumLightVertex = vec4(vWorldPos[0], vTexlmCoord[0].w);
-            skyLightFixStrength += skyLightFixStrengthAlt;
-            if (vTexlmCoord[0].w > vTexlmCoord[1].w) {
-                minimumLightVertex = vec4(vWorldPos[1], vTexlmCoord[1].w);
+            vec4 minimumLightVertex = vec4(vWorldPos[0], vTexlmCoord[0].w * fixDirection);
+            float minimumLight1 = vTexlmCoord[1].w * fixDirection;
+            if (minimumLightVertex.w > minimumLight1) {
+                minimumLightVertex = vec4(vWorldPos[1], minimumLight1);
             }
-            if (minimumLightVertex.w > vTexlmCoord[2].w) {
+            if (minimumLightVertex.w > vTexlmCoord[2].w * fixDirection) {
                 minimumLightVertex.xyz = vWorldPos[2];
             }
             maximumLight += dot(minimumLightVertex.xyz, skyLightFixStrengthAlt);
+            maximumLight *= fixDirection;
+            skyLightFixStrengthRaw *= fixDirection;
         #endif
     #endif
 
@@ -79,7 +82,7 @@ void main() {
         viewNormal = normal;
 
         #if defined SKYLIGHT_FIX && defined SHADOW_AND_SKY
-            texlmcoord.w = clamp(texlmcoord.w + maximumLight - dot(vWorldPos[i], skyLightFixStrength), 0.0, 1.0);
+            texlmcoord.w = clamp(texlmcoord.w + maximumLight - dot(vWorldPos[i], skyLightFixStrengthRaw), 0.0, 1.0);
         #endif
 
         EmitVertex();

@@ -1,9 +1,9 @@
-const vec3 ozoneAbsorption = vec3(6.1e-6,8.4e-6,0.2e-6);
+const vec3 ozoneAbsorption = vec3(6.6e-6,8.0e-6,0.2e-6);
 const vec3 pureRayleighBeta = vec3(3.2e-6, 9.1e-6, 29.6e-6);
 const vec3 rayleighBeta = pureRayleighBeta + ozoneAbsorption;
 const float mieBeta = 2.1e-5;
 const vec3 totalBeta = rayleighBeta + mieBeta;
-const float rayLeighScaledHeight = 20500.0;
+const float rayLeighScaledHeight = 18500.0;
 const float mieScaledHeight = 1200.0;
 const vec2 scaledHeight = vec2(rayLeighScaledHeight, mieScaledHeight);
 const float mieG = 0.76;
@@ -133,7 +133,7 @@ vec3 singleAtmosphereScattering(vec3 skyLightColor, vec3 worldPos, vec3 worldDir
             float twilightHeight = sunHeight + twilightRange;
             float sunsetBoost = 
             exp(-sunHeight * sunHeight * 200.0) * 0.0 + 
-            exp(-twilightHeight * twilightHeight * 380.0) * 2.0;
+            exp(-twilightHeight * twilightHeight * 380.0) * 10.0;
             float sunsetBoostFactor = 1.0 + clamp(sunsetBoost, 0.0, 3.0);
             vec3 viewToSun = normalize(sunDir - worldDir);
             float azimuthFactor = pow(max(dot(viewToSun, sunDir), 0.0), 4.0);

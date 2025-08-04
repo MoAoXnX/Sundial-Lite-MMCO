@@ -28,7 +28,7 @@ vec4 planetIntersectionData(vec3 worldPos, vec3 worldDir) {
 
 float rayleighPhase(float cosAngle) {
     const float rayleighFactor = (1.0 / (4.0 * PI)) * (8.0 / 10.0);
-    return 14.0 / 5.0 * rayleighFactor + (0.5 * rayleighFactor * cosAngle);
+    return 10.0 / 5.0 * rayleighFactor + (0.5 * rayleighFactor * cosAngle);
 }
 
 float miePhase(float cosAngle, float g, float g2) {

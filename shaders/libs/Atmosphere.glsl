@@ -1,9 +1,9 @@
 const vec3 ozoneAbsorption = vec3(6.6e-6,8.0e-6,0.2e-6);
-const vec3 pureRayleighBeta = vec3(3.2e-6, 9.1e-6, 29.6e-6);
+const vec3 pureRayleighBeta = vec3(4.2e-6, 10.1e-6, 29.6e-6);
 const vec3 rayleighBeta = pureRayleighBeta + ozoneAbsorption;
 const float mieBeta = 2.1e-5;
 const vec3 totalBeta = rayleighBeta + mieBeta;
-const float rayLeighScaledHeight = 14500.0;
+const float rayLeighScaledHeight = 12500.0;
 const float mieScaledHeight = 1200.0;
 const vec2 scaledHeight = vec2(rayLeighScaledHeight, mieScaledHeight);
 const float mieG = 0.76;

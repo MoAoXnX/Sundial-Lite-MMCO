@@ -95,7 +95,7 @@ vec4 blockyCloud(vec3 baseColor, vec3 atmosphere, vec3 worldPos, vec3 worldDir, 
                 cloudTexel = (cloudTexel + nextVoxel.xz * dirSigned.xz) & 63;
             }
 
-            vec3 cloudColor = sunColor * 8.0 * (1.1 - sqrt(weatherStrength)) * exp(-sqrt(shadowOpticalDepth) * 3.0);
+            vec3 cloudColor = sunColor * 10.0 * (1.1 - sqrt(weatherStrength)) * exp(-sqrt(shadowOpticalDepth) * 3.0) * SUNLIGHT_BRIGHTNESS;
             cloudColor += mix(skyColorUp, atmosphere, vec3(pow2(clamp(worldDir.y, 0.0, 1.0)))) * exp(-0.5 * (1.0 - cloudPos.y) * (1.0 - cloudNormal.y));
 
             float cloudDistance = length(cloudOffset);
@@ -214,7 +214,7 @@ vec4 sampleRealisticCloud(vec3 cloudPos, vec3 sunDir, vec3 atmosphere) {
 
         sunlightStrength *= CLOUD_REALISTIC_BASIC_SHADOWLIGHT + exp2(-sqrt(sunlightOpticalDepth * CLOUD_REALISTIC_SAMPLE_DENSITY * 1.44269502 * 1.44269502));
         moonlightStrength *= CLOUD_REALISTIC_BASIC_SHADOWLIGHT + exp2(-sqrt(moonlightOpticalDepth * CLOUD_REALISTIC_SAMPLE_DENSITY * 1.44269502 * 1.44269502));
-        result.rgb += 8.0 * (sunlightStrength + moonlightStrength * nightBrightness);
+        result.rgb += 10.0 * SUNLIGHT_BRIGHTNESS * (sunlightStrength + moonlightStrength * nightBrightness);
 
         float cloudHeight = -clamp(1.0 + (earthRadius + CLOUD_REALISTIC_HEIGHT + 500.0) / CLOUD_REALISTIC_CENTER_THICKNESS - cloudDistance / CLOUD_REALISTIC_CENTER_THICKNESS, 0.0, 1.0) +
             clamp(
@@ -490,7 +490,7 @@ vec4 planeClouds(vec3 worldPos, vec3 worldDir, vec3 sunDirection, vec3 skyColorU
             vec3 sunlightStrength, moonlightStrength;
             sampleInScatteringDoubleSide(cloudHeight, c, cExpH, LdotP, sunlightStrength, moonlightStrength);
 
-            vec3 cloudColor = 8.0 * (sunlightStrength + moonlightStrength * nightBrightness);
+            vec3 cloudColor = 10.0 * (sunlightStrength + moonlightStrength * nightBrightness) * SUNLIGHT_BRIGHTNESS;
             result = vec4(cloudColor, cloudDensity * cloudDensity);
         }
     }

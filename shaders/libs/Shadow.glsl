@@ -45,14 +45,14 @@ const float realShadowMapResolution = shadowMapResolution * MC_SHADOW_QUALITY;
         return caustic;
     }
 
-    float basicSunlight = (1.0 - sqrt(weatherStrength)) * 8.0 * SUNLIGHT_BRIGHTNESS;
+    float basicSunlight = (1.0 - sqrt(0)) * 8.0 * SUNLIGHT_BRIGHTNESS;
 
     vec3 singleSampleShadow(
         vec3 worldPos, vec3 geoNormal, float NdotL, float lightFactor,
         float smoothness, float porosity, float skyLight, float detail
     ) {
         vec3 result = vec3(0.0);
-        if (weatherStrength < 0.999) {
+        if (true) {
             vec3 sssShadowCoord = worldPosToShadowCoordNoBias(worldPos);
             float normalFactor = clamp(pow(NdotL, pow2(1.0 - min(0.3, smoothness))), 0.0, 1.0);
             worldPos += geoNormal * ((length(worldPos) * 2e-3 + 2e-2) * (1.0 + sqrt(1.0 - NdotL))) * 4096.0 / realShadowMapResolution;

@@ -42,7 +42,7 @@ const float shadowDistance = 120.0; // [80.0 120.0 160.0 200.0 240.0 280.0 320.0
         vec3 worldPos, vec3 worldGeoNormal, float NdotL, float lightFactor, float smoothness, float porosity, float skyLight, vec2 noise
     ) {
         vec3 result = vec3(0.0);
-        if (weatherStrength < 0.999) {
+        if (true) {
             vec3 sssShadowCoord = worldPosToShadowCoordNoBias(worldPos);
             float normalOffsetLen = (length(worldPos) * 2e-3 + 2e-2) * (1.0 + sqrt(1.0 - NdotL));
             vec3 normalOffset = mat3(shadowModelViewProj0, shadowModelViewProj1, shadowModelViewProj2) * (worldGeoNormal * normalOffsetLen * 4096.0 / realShadowMapResolution);
@@ -55,7 +55,7 @@ const float shadowDistance = 120.0; // [80.0 120.0 160.0 200.0 240.0 280.0 320.0
             basicShadowCoord.st = basicShadowCoord.st * 0.25 * distortFactor + 0.75;
 
             float normalFactor = clamp(pow(NdotL, pow2(1.0 - smoothness * 0.3)), 0.0, 1.0);
-            float basicSunlight = 8.0 * SUNLIGHT_BRIGHTNESS - 8.0 * SUNLIGHT_BRIGHTNESS * sqrt(weatherStrength);
+            float basicSunlight = 8.0 * SUNLIGHT_BRIGHTNESS - 8.0 * SUNLIGHT_BRIGHTNESS * sqrt(weatherStrength) * 0.8;
             NdotL = abs(dot(worldGeoNormal, shadowDirection));
             NdotL = NdotL + (1.0 - NdotL) * clamp(porosity * 255.0 / 191.0 - 64.0 / 191.0, 0.0, 1.0);
             result = vec3(basicSunlight * smoothstep(0.8, 0.9, skyLight) * (normalFactor + (1.0 - normalFactor) * NdotL * step(64.5 / 255.0, porosity)));

@@ -272,6 +272,7 @@ value.AGX_LOOK.1=Golden
 value.AGX_LOOK.2=Punchy
 value.AGX_LOOK.3=Pure
 value.AGX_LOOK.4=Cold
+value.AGX_LOOK.5=Memory
 option.AGX_EV_MIN=AgX minimum EV
 option.AGX_EV_MAX=AgX maximum EV
 # Exposure

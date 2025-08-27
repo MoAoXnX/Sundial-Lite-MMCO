@@ -8,7 +8,7 @@ in vec2 texcoord;
 
 #define CLOUD_IN_REFLECTION
 #define SCREEN_SPACE_REFLECTION_STEP 16 // [2 3 4 5 6 7 8 10 12 14 16 20 24 28 32]
-#define SCREEN_SPACE_REFLECTION_REFINEMENTS 3 // [1 2 3 4 5 6 8 10]
+#define SCREEN_SPACE_REFLECTION_REFINEMENTS 5 // [1 2 3 4 5 6 8 10]
 
 #include "/settings/CloudSettings.glsl"
 #include "/settings/GlobalSettings.glsl"

@@ -38,6 +38,8 @@ screen.Weather=天气
 screen.ModSupport=Mod支持
 screen.ModSupport.comment=自动检测Mod方块的属性
 screen.Experimental=实验性效果
+profile.Default=默认
+profile.Vanilla=原版
 
 # Texture
 option.TEXTURE_RESOLUTION=纹理分辨率
@@ -371,6 +373,7 @@ option.MOD_PLANT_DETECTION.comment=将所有倾斜的未硬编码表面视为植
 
 # Experimental
 option.AUTHOR=作者
+option.MODIFIED=修改
 option.SKYLIGHT_FIX=天空光照修复
 option.SKYLIGHT_FIX.comment=[实验性]修复1.14开始的完整方块光源周围天空光照等级下降导致的一系列问题
 option.GLOWING_OVERLAY=发光实体遮罩

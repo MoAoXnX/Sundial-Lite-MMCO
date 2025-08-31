@@ -342,6 +342,7 @@ option.MOD_PLANT_DETECTION.comment=Assuming all slope not hardcoded to be plant.
 # Experimental
 option.AUTHOR=Author
 option.AUTHOR.comment=https://afdian.net/a/geforcelegend. https://space.bilibili.com/129209703
+option.MODIFIED=Modified
 option.SKYLIGHT_FIX=Sky Light Fix
 option.SKYLIGHT_FIX.comment=[Experimental] Try to fix the wrong sky light level around opaque emitting blocks after Minecraft 1.14
 option.GLOWING_OVERLAY=Glowing entities overlay

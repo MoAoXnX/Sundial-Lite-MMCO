@@ -1,4 +1,5 @@
 #define AUTHOR GeForceLegend // [GeForceLegend]
+#define MODIFIED MoAoXnX // [MoAoXnX]
 
 #define SETTINGS
 // Texture Settings

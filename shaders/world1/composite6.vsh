@@ -2,4 +2,4 @@
 
 #define SKY_COLOR_UP
 
-#include "/world1/programs/common/Common.vert"
+#include "/programs/common/Common.vert"

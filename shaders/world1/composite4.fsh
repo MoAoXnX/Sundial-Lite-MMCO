@@ -1,5 +1,5 @@
 #version 330 compatibility
 
-#define THE_END
+#define SHADOW_AND_SKY
 
 #include "/programs/composite/Composite4.frag"

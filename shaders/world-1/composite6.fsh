@@ -1,5 +1,5 @@
 #version 330 compatibility
 
-#define SHADOW_AND_SKY
+#define NETHER
 
 #include "/programs/composite/Composite6.frag"

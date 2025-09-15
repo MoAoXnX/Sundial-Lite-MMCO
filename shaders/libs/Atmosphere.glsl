@@ -352,7 +352,7 @@ float endFogAbsorption(float endDepth) {
 }
 
 vec3 endFogScattering(float endDepth) {
-    return END_FOG_BRIGHTNESS * 0.1 * (1.0 - exp(-endDepth * endAbsorptionBeta)) * vec3(0.5, 0.4, 0.8);
+    return END_FOG_BRIGHTNESS * 0.1 * (1.0 - exp(-endDepth * endAbsorptionBeta)) * vec3(0.4);
 }
 
 vec3 endFogTotal(vec3 targetColor, float endDepth) {

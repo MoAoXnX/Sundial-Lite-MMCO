@@ -1,6 +1,6 @@
 #version 330 compatibility
 
-#define THE_END
-#define BASIC_LIGHT vec3(8e-2, 7e-2, 11e-2)
+#define SHADOW_AND_SKY
+#define BASIC_LIGHT vec3(15e-2, 14e-2, 16e-2)
 
 #include "/programs/deferred/Deferred11.frag"

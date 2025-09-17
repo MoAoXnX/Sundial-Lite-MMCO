@@ -1,4 +1,4 @@
-const vec3 ozoneAbsorption = vec3(6.6e-6,8.0e-6,0.2e-6);
+const vec3 ozoneAbsorption = vec3(6.0e-6,8.0e-6,0.2e-6);
 const vec3 pureRayleighBeta = vec3(4.2e-6, 10.1e-6, 29.6e-6);
 const vec3 rayleighBeta = pureRayleighBeta + ozoneAbsorption;
 const float mieBeta = 2.1e-5;
@@ -122,16 +122,6 @@ vec3 singleAtmosphereScattering(vec3 skyLightColor, vec3 worldPos, vec3 worldDir
             float sunCosAngle = dot(worldDir, sunDir);
             float sunRayleigh = rayleighPhase(sunCosAngle);
             float sunMie = miePhase(sunCosAngle, mieG, mieG2);
-                        float sunHeight = sunDir.y;
-            float twilightRange = 0.15;
-            float twilightHeight = sunHeight + twilightRange;
-            float sunsetBoost = 
-            exp(-sunHeight * sunHeight * 200.0) * 0.0 + 
-            exp(-twilightHeight * twilightHeight * 380.0) * 10.0;
-            float sunsetBoostFactor = 1.0 + clamp(sunsetBoost, 0.0, 3.0);
-            vec3 viewToSun = normalize(sunDir - worldDir);
-            float azimuthFactor = pow(max(dot(viewToSun, sunDir), 0.0), 4.0);
-            sunsetBoost *= mix(0.3, 1.0, azimuthFactor);
             float moonRayleigh = rayleighPhase(-sunCosAngle) * nightBrightness;
             float moonMie = miePhase(-sunCosAngle, mieG, mieG2) * nightBrightness;
 
@@ -352,7 +342,7 @@ float endFogAbsorption(float endDepth) {
 }
 
 vec3 endFogScattering(float endDepth) {
-    return END_FOG_BRIGHTNESS * 0.1 * (1.0 - exp(-endDepth * endAbsorptionBeta)) * vec3(0.4);
+    return END_FOG_BRIGHTNESS * 0.1 * (1.0 - exp(-endDepth * endAbsorptionBeta)) * vec3(0.8, 0.8, 0.6);
 }
 
 vec3 endFogTotal(vec3 targetColor, float endDepth) {

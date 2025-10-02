@@ -270,9 +270,9 @@ void main() {
         if (noCoord) {
             // Physics mod snow support
             rawData.parallaxOffset = 0.0;
-            rawData.smoothness = 0.0;
+            rawData.smoothness = 0.6;
             rawData.metalness = 0.0;
-            rawData.porosity = 0.0;
+            rawData.porosity = 0.5;
             rawData.emissive = 0.0;
             #ifdef ENTITIES
                 if (!useTexAlbedo) {

@@ -1,9 +1,9 @@
-const vec3 ozoneAbsorption = vec3(6.0e-6,8.0e-6,0.2e-6);
+const vec3 ozoneAbsorption = vec3(3e-6, 6e-6, 0.2e-6);
 const vec3 pureRayleighBeta = vec3(4.2e-6, 10.1e-6, 29.6e-6);
 const vec3 rayleighBeta = pureRayleighBeta + ozoneAbsorption;
 const float mieBeta = 2.1e-5;
 const vec3 totalBeta = rayleighBeta + mieBeta;
-const float rayLeighScaledHeight = 12500.0;
+const float rayLeighScaledHeight = 10000.0;
 const float mieScaledHeight = 1200.0;
 const vec2 scaledHeight = vec2(rayLeighScaledHeight, mieScaledHeight);
 const float mieG = 0.76;
@@ -28,7 +28,7 @@ vec4 planetIntersectionData(vec3 worldPos, vec3 worldDir) {
 
 float rayleighPhase(float cosAngle) {
     const float rayleighFactor = (1.0 / (4.0 * PI)) * (8.0 / 10.0);
-    return 14.0 / 5.0 * rayleighFactor + (0.5 * rayleighFactor * cosAngle);
+    return 20.0 / 5.0 * rayleighFactor + (0.5 * rayleighFactor * cosAngle);
 }
 
 float miePhase(float cosAngle, float g, float g2) {

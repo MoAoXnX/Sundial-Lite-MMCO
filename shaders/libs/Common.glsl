@@ -221,7 +221,7 @@ vec3 sunlightSpecular(vec3 viewDir, vec3 lightDir, vec3 normal, vec3 albedo, flo
     float LdotHInv = inversesqrt(LdotH2);
     float LdotH = clamp(LdotH2 * LdotHInv, 0.0, 1.0);
 
-    float roughness = pow2(1.06 - smoothness);
+    float roughness = pow2(1.05 - smoothness);
     vec3 reflectDir = viewDir + 2.0 * NdotV * normal;
     float NdotH2 = clamp(dot(reflectDir, lightDir) * 1.0001 * 0.5 + 0.0001 * 0.5 + 0.5, 0.0, 1.0);
 

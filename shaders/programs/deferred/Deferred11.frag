@@ -183,10 +183,15 @@ const float shadowDistance = 120.0; // [80.0 120.0 160.0 200.0 240.0 280.0 320.0
         stepSize *= 0.003 * 12.0 / SCREEN_SPACE_SHADOW_SAMPLES;
 
         targetCoord = originCoord + stepSize * SCREEN_SPACE_SHADOW_SAMPLES;
-        vec3 viewPosDiff = projectionToViewPos(targetCoord.xyz) - viewPos;
+        vec3 targetViewPos = screenToViewPos(targetCoord.xy, targetCoord.z);
+        #ifdef DISTANT_HORIZONS
+            if (targetCoord.z >= 1.0) {
+                targetViewPos = screenToViewPosDH(targetCoord.xy, targetCoord.w);
+            }
+        #endif
         const float absorptionScale = SUBSERFACE_SCATTERING_STRENTGH / (191.0);
-        float absorptionBeta = -0.5 * abs(viewPosDiff.z) / (max(porosity * absorptionScale * 255.0 - absorptionScale * 64.0, 1e-5) * abs(projShadowDirection.w));
-        float absorption = exp2(absorptionBeta * porosityScale * 0.01) * step(0.25, porosity) * (1.0 - clamp(NdotL * 10.0, 0.0, 1.0) * porosityScale) + 1.0;
+        float absorptionBeta = -0.5 * abs(targetViewPos.z - viewPos.z) / (max(porosity * absorptionScale * 255.0 - absorptionScale * 64.0, 1e-5) * abs(projShadowDirection.w));
+        float absorption = exp2(absorptionBeta * porosityScale * 0.5) * step(0.25, porosity) * (1.0 - clamp(NdotL * 10.0, 0.0, 1.0) * porosityScale) + 1.0;
         float shadowWeight = clamp(1.0 - abs(NdotL) * 10.0, 0.0, 1.0) * clamp(1.0 - 1.1 / viewLength / shadowDistance, 0.0, 1.0);
 
         vec4 sampleCoord = originCoord + noise.x * stepSize;

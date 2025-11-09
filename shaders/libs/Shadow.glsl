@@ -1,6 +1,8 @@
 const int shadowMapResolution = 2048; // [1024 2048 4096 8192 16384]
 const float realShadowMapResolution = shadowMapResolution * MC_SHADOW_QUALITY;
 
+#define SUNLIGHTINRAIN 0.8 // [0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0]
+
 #ifdef SHADOW_AND_SKY
     vec3 worldPosToShadowCoordNoDistort(vec3 worldPos) {
         vec3 shadowCoord = mat3(shadowModelViewProj0, shadowModelViewProj1, shadowModelViewProj2) * worldPos + shadowModelViewProj3;
@@ -55,7 +57,7 @@ const float realShadowMapResolution = shadowMapResolution * MC_SHADOW_QUALITY;
         if (true) {
             vec3 sssShadowCoord = worldPosToShadowCoordNoDistort(worldPos);
             float normalFactor = clamp(pow(NdotL, pow2(1.0 - min(0.3, smoothness))), 0.0, 1.0);
-            float basicSunlight = 8.0 * SUNLIGHT_BRIGHTNESS - 8.0 * SUNLIGHT_BRIGHTNESS * sqrt(weatherStrength) * 0.8;
+            float basicSunlight = 8.0 * SUNLIGHT_BRIGHTNESS - 8.0 * SUNLIGHT_BRIGHTNESS * sqrt(weatherStrength) * SUNLIGHTINRAIN;
             worldPos += geoNormal * ((length(worldPos) * 2e-3 + 2e-2) * (1.0 + sqrt(1.0 - NdotL))) * 4096.0 / realShadowMapResolution;
             vec3 shadowCoord = worldPosToShadowCoord(worldPos);
             NdotL = abs(dot(geoNormal, shadowDirection));

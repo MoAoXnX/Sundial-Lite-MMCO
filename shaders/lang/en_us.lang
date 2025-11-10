@@ -131,7 +131,11 @@ option.MOD_LIGHT_DETECTION.comment=Assuming all faces with maximum block light l
 option.SUNLIGHT_BRIGHTNESS=Sun light brightness
 option.NIGHT_BRIGHTNESS=Night brightness
 option.NIGHT_VISION_BRIGHTNESS=Night vision brightness
-option.SUNLIGHTINRAIN.comment=Degree of sunlight brightness reduction in rainy days
+option.SUNLIGHTINRAIN=Sunlight in rain
+option.SUNLIGHTINRAIN.comment=Degree of sunlight brightness reduction in rainy days.
+option.BASIC_LIGHT=Basic light
+option.SKYBRIGHTNESS=Sky brightness
+option.SUNLIGHTSPECULARROUGH=Sunlight specular roughness
 # LightColor
 option.LIGHT_BRIGHTNESS=Light brightness
 option.LIGHT_COLOR_R=Light color: red

@@ -142,9 +142,11 @@ option.MOD_LIGHT_DETECTION.comment=将所有方块光照等级为最高的表面
 option.SUNLIGHT_BRIGHTNESS=日光亮度
 option.NIGHT_BRIGHTNESS=夜晚亮度
 option.NIGHT_VISION_BRIGHTNESS=夜视亮度
-option.SUNLIGHTINRAIN=雨天阳光遮蔽程度
-option.BASIC_LIGHT=基础亮度
+option.SUNLIGHTINRAIN=雨天阳光削减程度
 option.SUNLIGHTINRAIN.comment=雨天阳光亮度降低的程度
+option.BASIC_LIGHT=基础亮度
+option.SKYBRIGHTNESS=天空亮度
+option.SUNLIGHTSPECULARROUGH=阳光反射粗糙度
 # LightColor
 option.LIGHT_BRIGHTNESS=光源亮度
 option.LIGHT_COLOR_R=光源颜色：红

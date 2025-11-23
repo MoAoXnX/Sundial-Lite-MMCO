@@ -162,7 +162,11 @@ void main() {
         solidColor.rgb = mix(rawSolidColor, solidColor.rgb, vec3(solidColor.w)) * stainedColor;
 
         float isTargetParticle = 1.0 - float(isTargetNotParticle);
-        vec3 vanillaLight = pow2(gbufferData.lightmap.y) * (skyColorUp + sunColor * SUNLIGHT_BRIGHTNESS) * (1.0 - gbufferData.metalness) * isTargetParticle;
+        float blockLightLevel = gbufferData.lightmap.x;
+        float skyLightLevel = gbufferData.lightmap.y;
+        vec3 skyLightContribution = pow2(skyLightLevel) * (skyColorUp + sunColor * SUNLIGHT_BRIGHTNESS);
+        vec3 blockLightContribution = pow2(blockLightLevel) * vec3(1.0);
+        vec3 vanillaLight = (skyLightContribution + blockLightContribution) * (1.0 - gbufferData.metalness) * isTargetParticle;
         solidColor.rgb += gbufferData.albedo.rgb * gbufferData.albedo.w * (gbufferData.emissive * BLOCK_LIGHT_BRIGHTNESS * PI + vanillaLight);
         #ifdef SHADOW_AND_SKY
             float NdotL = clamp(dot(worldNormal, shadowDirection) + isTargetParticle, 0.0, 1.0);

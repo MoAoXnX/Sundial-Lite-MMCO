@@ -1,3 +1,8 @@
+# Sundial Lite - MMCO
+
+Personal simple modification of Sundial lite
+![(6344)1](https://github.com/user-attachments/assets/f588581f-fddb-42d9-aea5-3bfc556fbbf9)
+
 # Sundial Lite
 
 Sundial Lite is the free and open source version of Sundial. It's using [GNU General Public Licence 3.0](./LICENSE). For the full and paid version, visit [Aifadian](https://afdian.com/a/geforcelegend). For legit issues, I'll try avoid using platforms blocked by GFW like Patreon, so sorry for some users having issue signing in this site.

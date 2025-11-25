@@ -20,7 +20,7 @@ in vec2 texcoord;
         #define MINIMUM_BRIGHTNESS 0.00 // [0.00 0.01 0.02 0.03 0.04 0.05 0.06 0.07 0.08 0.09 0.10]
         #define BLACK_TIGHTNESS 1.0 // [0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0 1.1 1.2 1.3 1.4 1.5 1.6 1.7 1.8 1.9 2.0]
     // AgX settings
-        #define AGX_LOOK 3 // [0 1 2 3 4 5 6]
+        #define AGX_LOOK 3 // [0 1 2 3 6]
         #define AGX_EV_MIN -7.5 // [-15.0 -14.5 -14.0 -13.5 -13.0 -12.5 -12.0 -11.5 -11.0 -10.5 -10.0 -9.5 -9.0 -8.5 -8.0 -7.5 -7.0 -6.5 -6.0 -5.5 -5.0 -4.5 -4.0 -3.5 -3.0 -2.5 -2.0 -1.5 -1.0 -0.5 0.0 0.5 1.0 1.5 2.0 2.5 3.0 3.5 4.0 4.5 5.0 5.5 6.0 6.5 7.0 7.5 8.0 8.5 9.0 9.5 10]
         #define AGX_EV_MAX 5.0 // [-15.0 -14.5 -14.0 -13.5 -13.0 -12.5 -12.0 -11.5 -11.0 -10.5 -10.0 -9.5 -9.0 -8.5 -8.0 -7.5 -7.0 -6.5 -6.0 -5.5 -5.0 -4.5 -4.0 -3.5 -3.0 -2.5 -2.0 -1.5 -1.0 -0.5 0.0 0.5 1.0 1.5 2.0 2.5 3.0 3.5 4.0 4.5 5.0 5.5 6.0 6.5 7.0 7.5 8.0 8.5 9.0 9.5 10]
 // Exposure
@@ -166,20 +166,10 @@ vec3 AgX(vec3 val) {
         sat = 1.4;
     #elif AGX_LOOK == 3
         // Pure
-        slope = vec3(1.0, 0.98, 0.96);
-        power = vec3(1.2, 1.15, 1.15);
-        sat = 0.9;
-    #elif AGX_LOOK == 4
-        // Cold
-        slope = vec3(1.0, 1.08, 1.1);
-        power = vec3(1.2, 1.2, 1.1);
-        sat = 0.9;
-    #elif AGX_LOOK == 5
-        // Memory
-        offset = vec3(0.0, 0.01, 0.02);
-        slope = vec3(0.95, 1.1, 1.05);
-        power = vec3(1.5, 1.7, 1.9);
-        sat = 0.7;
+        offset = vec3(OFFSET_R, OFFSET_G, OFFSET_B);
+        slope = vec3(SLOPE_R, SLOPE_G, SLOPE_B);
+        power = vec3(POWER_R, POWER_G, POWER_B);
+        sat = SAT_1;
     #elif AGX_LOOK == 6
         // 6
         offset = vec3(0.03, 0.01, 0);

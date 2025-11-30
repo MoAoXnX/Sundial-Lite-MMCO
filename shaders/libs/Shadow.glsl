@@ -1,8 +1,6 @@
 const int shadowMapResolution = 2048; // [1024 2048 4096 8192 16384]
 const float realShadowMapResolution = shadowMapResolution * MC_SHADOW_QUALITY;
 
-#define SUNLIGHTINRAIN 0.8 // [0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0]
-
 #ifdef SHADOW_AND_SKY
     vec3 worldPosToShadowCoordNoDistort(vec3 worldPos) {
         vec3 shadowCoord = mat3(shadowModelViewProj0, shadowModelViewProj1, shadowModelViewProj2) * worldPos + shadowModelViewProj3;

@@ -94,19 +94,16 @@ vec3 directionDistribution(vec2 noise, vec3 normal, vec3 viewDir, float roughnes
 
 vec4 reflection(GbufferData gbufferData, vec3 gbufferN, vec3 gbufferK, float firstWeight) {
     vec3 viewPos;
-    #ifdef DISTANT_HORIZONS
+    #ifdef LOD
         if (gbufferData.depth > 1.0) {
-            viewPos = screenToViewPosDH(texcoord, gbufferData.depth - 1.0);
+            viewPos = screenToViewPosLod(texcoord, gbufferData.depth - 1.0);
         } else
     #endif
     {
         viewPos = screenToViewPos(texcoord, gbufferData.depth);
     }
     vec3 viewDir = normalize(viewPos);
-    float NdotV = max(dot(viewPos, -gbufferData.geoNormal), 1e-6);
-    gbufferData.parallaxOffset *= PARALLAX_DEPTH;
-    viewPos += gbufferData.parallaxOffset * viewPos * 0.2 / NdotV;
-    viewPos += gbufferData.geoNormal * 0.01;
+    viewPos += gbufferData.geoNormal * 3e-3;
 
     NoiseGenerator noiseGenerator = initNoiseGenerator(uvec2(gl_FragCoord.st), uint(frameCounter));
 
@@ -135,11 +132,11 @@ vec4 reflection(GbufferData gbufferData, vec3 gbufferN, vec3 gbufferK, float fir
         float targetProjScale = 0.5 / targetProjPos.w;
         vec4 targetCoord = vec4(targetProjPos.xyz * targetProjScale + 0.5, 0.0);
 
-        #ifdef DISTANT_HORIZONS
-            projDirection.z = rayDir.z * dhProjection[2].z;
-            float originProjDepthDH = viewPos.z * dhProjection[2].z + dhProjection[3].z;
-            sampleCoord.w = originProjDepthDH * originProjScale + 0.5;
-            targetCoord.w = (originProjDepthDH + projDirection.z * traceLength) * targetProjScale + 0.5;
+        #ifdef LOD
+            projDirection.z = rayDir.z * projLod()[2].z;
+            float originProjDepthLod = viewPos.z * projLod()[2].z + projLod()[3].z;
+            sampleCoord.w = originProjDepthLod * originProjScale + 0.5;
+            targetCoord.w = (originProjDepthLod + projDirection.z * traceLength) * targetProjScale + 0.5;
         #endif
 
         float noise = blueNoiseTemporal(texcoord).x + 0.1;
@@ -148,35 +145,44 @@ vec4 reflection(GbufferData gbufferData, vec3 gbufferN, vec3 gbufferK, float fir
         #ifdef TAA
             sampleCoord.st += taaOffset * 0.5;
         #endif
+        sampleCoord.zw -= 2e-7;
 
         bool hitSky = true;
         float minimumThichness = max(0.001 * originProjScale, abs(stepSize.z));
-        float minimumThichnessDH = max(0.01 * originProjScale, abs(stepSize.w));
+        float minimumThichnessLod = max(0.01 * originProjScale, abs(stepSize.w));
         for (int i = 0; i < SCREEN_SPACE_REFLECTION_STEP; i++) {
             float sampleDepth = textureLod(depthtex1, sampleCoord.st, 0.0).x;
+            float parallaxData = textureLod(colortex3, sampleCoord.st, 0.0).w;
+            float isHand = clamp(parallaxData - 511.0, 0.0, 1.0);
+            sampleDepth = mix(sampleDepth, sampleDepth / MC_HAND_DEPTH - 0.5 / MC_HAND_DEPTH + 0.5, isHand);
+            sampleDepth += (parallaxData - 512.0 * isHand) / 512.0;
             bool hitCheck = sampleCoord.z > sampleDepth && sampleDepth < 1.0;
-            #ifdef DISTANT_HORIZONS
-                float sampleDepthDH = textureLod(dhDepthTex1, sampleCoord.st, 0.0).x;
-                hitCheck = hitCheck || (sampleDepth == 1.0 && sampleCoord.w > sampleDepthDH);
+            #ifdef LOD
+                float sampleDepthLod = getLodDepthSolid(sampleCoord.st);
+                hitCheck = hitCheck || (sampleDepth == 1.0 && sampleCoord.w > sampleDepthLod);
             #endif
             if (hitCheck) {
                 float stepScale = 0.5;
                 vec4 refinementCoord = sampleCoord;
                 for (int j = 0; j < SCREEN_SPACE_REFLECTION_REFINEMENTS; j++) {
                     float stepDirection = sampleDepth - refinementCoord.z;
-                    #ifdef DISTANT_HORIZONS
-                        float stepDirectionDH = sampleDepthDH - refinementCoord.w;
-                        stepDirection = mix(stepDirection, stepDirectionDH, float(sampleDepth == 1.0));
-                        sampleDepthDH = textureLod(dhDepthTex1, refinementCoord.st, 0.0).x;
+                    #ifdef LOD
+                        float stepDirectionLod = sampleDepthLod - refinementCoord.w;
+                        stepDirection = mix(stepDirection, stepDirectionLod, float(sampleDepth == 1.0));
+                        sampleDepthLod = getLodDepthSolid(refinementCoord.st);
                     #endif
                     refinementCoord += signMul(stepScale, stepDirection) * stepSize;
-                    sampleDepth = textureLod(depthtex2, refinementCoord.st, 0.0).x;
+                    sampleDepth = textureLod(depthtex1, refinementCoord.st, 0.0).x;
+                    parallaxData = textureLod(colortex3, refinementCoord.st, 0.0).w;
+                    isHand = clamp(parallaxData - 511.0, 0.0, 1.0);
+                    sampleDepth = mix(sampleDepth, sampleDepth / MC_HAND_DEPTH - 0.5 / MC_HAND_DEPTH + 0.5, isHand);
+                    sampleDepth += (parallaxData - 512.0 * isHand) / 512.0;
                     stepScale *= 0.5;
                 }
 
                 bool hitTerrain = abs(refinementCoord.z - sampleDepth) < minimumThichness && sampleDepth < 1.0;
-                #ifdef DISTANT_HORIZONS
-                    hitTerrain = hitTerrain || (sampleDepth == 1.0 && abs(refinementCoord.w - sampleDepthDH) < minimumThichnessDH && sampleDepthDH < 1.0);
+                #ifdef LOD
+                    hitTerrain = hitTerrain || (sampleDepth == 1.0 && abs(refinementCoord.w - sampleDepthLod) < minimumThichnessLod && sampleDepthLod < 1.0);
                 #endif
                 if (hitTerrain && clamp(refinementCoord.st, 0.0, 1.0) == refinementCoord.st) {
                     sampleCoord = refinementCoord;
@@ -192,14 +198,14 @@ vec4 reflection(GbufferData gbufferData, vec3 gbufferN, vec3 gbufferK, float fir
         vec4 intersectionData = planetIntersectionData(worldPos, rayDir);
         if (!hitSky) {
             vec3 sampleViewPos;
-            #ifdef DISTANT_HORIZONS
+            #ifdef LOD
                 if (sampleCoord.z >= 1.0) {
                     vec3 sampleProjPos = sampleCoord.xyw * 2.0 - 1.0;
                     #ifdef TAA
                         sampleProjPos.st -= taaOffset;
                     #endif
-                    sampleProjPos.xy /= vec2(dhProjection[0].x, dhProjection[1].y);
-                    float projectionScale = dhProjection[3].z / (sampleProjPos.z + dhProjection[2].z);
+                    sampleProjPos.xy /= vec2(projLod()[0].x, projLod()[1].y);
+                    float projectionScale = projLod()[3].z / (sampleProjPos.z + projLod()[2].z);
                     sampleViewPos = vec3(sampleProjPos.xy * projectionScale, -projectionScale);
                 } else
             #endif
@@ -276,9 +282,9 @@ void main() {
     ivec2 texel = ivec2(gl_FragCoord.st);
     float waterDepth = textureLod(depthtex0, texcoord, 0.0).r;
     float solidDepth = textureLod(depthtex1, texcoord, 0.0).r;
-    #ifdef DISTANT_HORIZONS
-        waterDepth += float(waterDepth == 1.0) * textureLod(dhDepthTex0, texcoord, 0.0).r;
-        solidDepth += float(solidDepth == 1.0) * textureLod(dhDepthTex1, texcoord, 0.0).r;
+    #ifdef LOD
+        waterDepth += float(waterDepth == 1.0) * getLodDepthWater(texcoord);
+        solidDepth += float(solidDepth == 1.0) * getLodDepthSolid(texcoord);
     #endif
     texBuffer0 = vec4(vec3(0.0), texelFetch(colortex4, texel, 0).w);
 
@@ -286,6 +292,11 @@ void main() {
     #ifdef REFLECTION
         if (waterDepth - float(waterDepth > 1.0) < 1.0) {
             GbufferData gbufferData = getGbufferData(texel, texcoord);
+            gbufferData.depth = waterDepth;
+            if (gbufferData.materialID == MAT_HAND) {
+                gbufferData.depth = gbufferData.depth / MC_HAND_DEPTH - 0.5 / MC_HAND_DEPTH + 0.5;
+            }
+
             vec3 n = vec3(1.5);
             vec3 k = vec3(0.0);
             float reflectionStrength = 1.0;
@@ -304,13 +315,14 @@ void main() {
                     diffuseWeight = 1.0 - (1.0 - diffuseWeight) * sqrt(clamp(gbufferData.smoothness - (1.0 - gbufferData.smoothness) * (1.0 - 0.6666 * gbufferData.metalness), 0.0, 1.0));
                 #endif
                 reflectionStrength = 1.0 - diffuseWeight;
+                float parallaxData = texelFetch(colortex3, texel, 0).w;
+                gbufferData.depth += (parallaxData - 512.0 * clamp(parallaxData - 511.0, 0.0, 1.0)) / 512.0;
             }
             #ifdef LABPBR_F0
                 n = mix(n, vec3(f0ToIor(gbufferData.metalness)), vec3(clamp(gbufferData.metalness * 1e+10, 0.0, 1.0)));
                 hardcodedMetal(gbufferData.metalness, n, k);
                 gbufferData.metalness = step(229.5 / 255.0, gbufferData.metalness);
             #endif
-            gbufferData.depth = waterDepth;
 
             if (reflectionStrength > 1e-5) {
                 reflectionColor = reflection(gbufferData, n, k, reflectionStrength);

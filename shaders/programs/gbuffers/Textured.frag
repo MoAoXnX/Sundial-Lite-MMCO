@@ -231,6 +231,12 @@ void main() {
             #endif
         #endif
         albedoData *= mix(vec4(1.0), texAlbedo, vec4(float(useTexAlbedo)));
+        #ifdef COLORWHEEL
+            float ao;
+            vec4 overlayColor;
+            clrwl_computeFragment(albedoData, albedoData, rawData.lightmap, ao, overlayColor);
+            albedoData.rgb = mix(albedoData.rgb, overlayColor.rgb, overlayColor.a);
+        #endif
 
         if (albedoData.w < 0.001) discard;
 
@@ -270,7 +276,7 @@ void main() {
         if (noCoord) {
             // Physics mod snow support
             rawData.parallaxOffset = 0.0;
-            rawData.smoothness = 0.6;
+            rawData.smoothness = 0.5;
             rawData.metalness = 0.0;
             rawData.porosity = 0.5;
             rawData.emissive = 0.0;

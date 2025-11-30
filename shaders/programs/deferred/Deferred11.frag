@@ -1,8 +1,7 @@
 #extension GL_ARB_gpu_shader5 : enable
 #extension GL_ARB_shading_language_packing: enable
 
-layout(location = 0) out vec4 texBuffer0;
-layout(location = 1) out vec4 texBuffer3;
+layout(location = 0) out vec4 texBuffer3;
 
 #ifdef SHADOW_AND_SKY
     in vec3 skyColorUp;
@@ -12,12 +11,15 @@ layout(location = 1) out vec4 texBuffer3;
 
 in vec2 texcoord;
 
+uniform int heldBlockLightValue;
+uniform vec3 relativeEyePosition;
 uniform vec4 projShadowDirection;
 
 #define PCSS
 #define PCSS_SAMPLES 9 // [2 3 4 5 6 7 8 9 10 12 14 16 18 20 25 30 36]
 #define SCREEN_SPACE_SHADOW_SAMPLES 12 // [4 5 6 7 8 9 10 12 14 16 18 20 25 30 35 40 45 50]
 #define SCREEN_SPACE_SHADOW
+#define VANILLA_BLOCK_LIGHT_FADE 2.0 // [0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0 1.1 1.2 1.3 1.4 1.5 1.6 1.7 1.8 1.9 2.0 2.2 2.4 2.6 2.8 3.0 3.2 3.4 3.6 3.8 4.0 4.2 4.4 4.6 4.8 5.0 5.5 6.0 6.5 7.0 7.5 8.0 9.5 10.0 11.0 12.0 13.0 14.0 15.0 16.0 17.0 18.0 19.0 20.0]
 
 const float shadowDistance = 120.0; // [80.0 120.0 160.0 200.0 240.0 280.0 320.0 360.0 400.0 480.0 560.0 640.0]
 
@@ -166,11 +168,11 @@ const float shadowDistance = 120.0; // [80.0 120.0 160.0 200.0 240.0 280.0 320.0
         float targetProjScale = 0.5 / targetProjPos.w;
         vec4 targetCoord = vec4(targetProjPos.xyz * targetProjScale + 0.5, 0.0);
 
-        #ifdef DISTANT_HORIZONS
-            projDirection.z = projShadowDirection.z / gbufferProjection[2].z * dhProjection[2].z;
-            float originProjDepthDH = viewPos.z * dhProjection[2].z + dhProjection[3].z;
-            originCoord.w = originProjDepthDH * projScale + 0.5;
-            targetCoord.w = (originProjDepthDH + projDirection.z * traceLength) * targetProjScale + 0.5;
+        #ifdef LOD
+            projDirection.z = projShadowDirection.z / gbufferProjection[2].z * projLod()[2].z;
+            float originProjDepthLod = viewPos.z * projLod()[2].z + projLod()[3].z;
+            originCoord.w = originProjDepthLod * projScale + 0.5;
+            targetCoord.w = (originProjDepthLod + projDirection.z * traceLength) * targetProjScale + 0.5;
         #endif
 
         vec4 stepSize = targetCoord - originCoord;
@@ -184,9 +186,9 @@ const float shadowDistance = 120.0; // [80.0 120.0 160.0 200.0 240.0 280.0 320.0
 
         targetCoord = originCoord + stepSize * SCREEN_SPACE_SHADOW_SAMPLES;
         vec3 targetViewPos = screenToViewPos(targetCoord.xy, targetCoord.z);
-        #ifdef DISTANT_HORIZONS
+        #ifdef LOD
             if (targetCoord.z >= 1.0) {
-                targetViewPos = screenToViewPosDH(targetCoord.xy, targetCoord.w);
+                targetViewPos = screenToViewPosLod(targetCoord.xy, targetCoord.w);
             }
         #endif
         const float absorptionScale = SUBSERFACE_SCATTERING_STRENTGH / (191.0);
@@ -198,10 +200,10 @@ const float shadowDistance = 120.0; // [80.0 120.0 160.0 200.0 240.0 280.0 320.0
         sampleCoord.zw -= 2e-7;
 
         float maximumThickness = 0.0005 * viewLength + 0.03 * float(materialID == MAT_HAND);
-        float maximumThicknessDH = 0.5 * viewLength;
+        float maximumThicknessLod = 0.5 * viewLength;
         float depthMultiplicator = mix(1.0, 1.0 / MC_HAND_DEPTH, float(materialID == MAT_HAND));
         float baseDepthOffset = 0.5 - 0.5 * depthMultiplicator;
-        sampleCoord.zw -= vec2(maximumThickness, maximumThicknessDH);
+        sampleCoord.zw -= vec2(maximumThickness, maximumThicknessLod);
 
         for (int i = 0; i < SCREEN_SPACE_SHADOW_SAMPLES; i++) {
             if (any(greaterThan(abs(sampleCoord.xy - 0.5), vec2(0.5))) || shadow < 0.01) {
@@ -209,10 +211,10 @@ const float shadowDistance = 120.0; // [80.0 120.0 160.0 200.0 240.0 280.0 320.0
             }
             float sampleDepth = textureLod(depthtex1, sampleCoord.st, 0.0).r;
             bool hit;
-            #ifdef DISTANT_HORIZONS
+            #ifdef LOD
                 if (sampleDepth == 1.0) {
-                    float sampleDepthDH = textureLod(dhDepthTex0, sampleCoord.st, 0.0).r;
-                    hit = abs(sampleCoord.w - sampleDepthDH) < maximumThicknessDH && sampleDepthDH < 1.0;
+                    float sampleDepthLod = getLodDepthSolidDeferred(sampleCoord.st);
+                    hit = abs(sampleCoord.w - sampleDepthLod) < maximumThicknessLod && sampleDepthLod < 1.0;
                 }
                 else
             #endif
@@ -265,10 +267,10 @@ void main() {
     GbufferData gbufferData = getGbufferData(texel, texcoord);
     vec3 viewPos;
     vec3 viewPosNoPOM;
-    #ifdef DISTANT_HORIZONS
+    #ifdef LOD
         if (gbufferData.depth == 1.0) {
-            gbufferData.depth = textureLod(dhDepthTex0, texcoord, 0.0).r;
-            viewPos = screenToViewPosDH(texcoord, gbufferData.depth - 1e-7);
+            gbufferData.depth = getLodDepthSolidDeferred(texcoord);
+            viewPos = screenToViewPosLod(texcoord, gbufferData.depth - 1e-7);
             viewPosNoPOM = viewPos;
             gbufferData.depth = -gbufferData.depth;
         } else
@@ -279,14 +281,13 @@ void main() {
         }
         viewPosNoPOM = screenToViewPos(texcoord, gbufferData.depth);
         float parallaxData = texelFetch(colortex3, texel, 0).w;
-        gbufferData.depth += abs(parallaxData) / 512.0;
+        gbufferData.depth += parallaxData / 512.0;
         viewPos = screenToViewPos(texcoord, gbufferData.depth);
     }
     vec3 worldPos = viewToWorldPos(viewPosNoPOM);
     vec3 worldDir = normalize(worldPos - gbufferModelViewInverse[3].xyz);
 
-    vec4 finalColor = vec4(0.0);
-    texBuffer0 = vec4(texelFetch(colortex0, texel, 0).rgb, texelFetch(colortex4, texel, 0).w);
+    vec4 finalColor = vec4(vec3(0.0), texelFetch(colortex3, texel, 0).w + 512.0 * float(gbufferData.materialID == MAT_HAND));
 
     if (abs(gbufferData.depth) < 1.0) {
         float viewLength = inversesqrt(dot(viewPos, viewPos));
@@ -307,10 +308,16 @@ void main() {
         #endif
         finalColor.rgb = vec3(BASIC_LIGHT);
         finalColor.rgb += pow(texelFetch(colortex4, ivec2(0), 0).rgb, vec3(2.2)) * NIGHT_VISION_BRIGHTNESS;
-        finalColor.rgb += pow(gbufferData.lightmap.x, 4.4) * lightColor;
+        const float fadeFactor = VANILLA_BLOCK_LIGHT_FADE;
+        #ifdef IS_IRIS
+            float eyeRelatedDistance = length(worldPos + relativeEyePosition);
+            gbufferData.lightmap.x = max(gbufferData.lightmap.x, heldBlockLightValue / 15.0 * clamp(1.0 - eyeRelatedDistance / 15.0, 0.0, 1.0));
+        #endif
+        float blockLight = pow2(1.0 / (fadeFactor - fadeFactor * fadeFactor / (1.0 + fadeFactor) * gbufferData.lightmap.x) - 1.0 / fadeFactor);
+        finalColor.rgb += blockLight * lightColor;
         #ifdef SHADOW_AND_SKY
             finalColor.rgb +=
-                pow(gbufferData.lightmap.y, 2.2) * (skyColorUp + sunColor) *
+                pow(gbufferData.lightmap.y, 2.2) * (skyColorUp + sunColor) * (0.6 - 0.3 * weatherStrength) *
                 (worldNormal.y * 0.3 + 0.6 + mix(dot(worldNormal, sunDirection), dot(worldNormal, shadowDirection), clamp(-sunDirection.y * 10.0, 0.0, 1.0)) * 0.2);
         #endif
         float NdotV = clamp(dot(viewDir, -gbufferData.normal), 0.0, 1.0);
@@ -362,4 +369,4 @@ void main() {
     texBuffer3 = finalColor;
 }
 
-/* DRAWBUFFERS:03 */
+/* DRAWBUFFERS:3 */

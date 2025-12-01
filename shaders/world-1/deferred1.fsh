@@ -2,4 +2,4 @@
 
 #define SHADOW_AND_SKY
 
-#include "/programs/gbuffers/Shadow.vert"
+#include "/programs/deferred/Deferred1.frag"

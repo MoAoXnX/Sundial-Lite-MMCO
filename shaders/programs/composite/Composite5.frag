@@ -189,9 +189,9 @@ void main() {
         float blockLightLevel = gbufferData.lightmap.x;
         float skyLightLevel = gbufferData.lightmap.y;
         vec3 skyLightContribution = pow2(skyLightLevel) * (skyColorUp + sunColor * SUNLIGHT_BRIGHTNESS);
-        vec3 blockLightContribution = pow2(blockLightLevel) * vec3(1.0);
+        vec3 blockLightContribution = pow2(blockLightLevel) * vec3(LIGHT_BRIGHTNESS);
         vec3 vanillaLight = (skyLightContribution + blockLightContribution) * (1.0 - gbufferData.metalness) * isTargetParticle;
-        solidColor.rgb += gbufferData.albedo.rgb * gbufferData.albedo.w * (gbufferData.emissive * BLOCK_LIGHT_BRIGHTNESS * PI + vanillaLight);
+        solidColor.rgb += gbufferData.albedo.rgb * gbufferData.albedo.w * (gbufferData.emissive * PBR_BRIGHTNESS * PI + vanillaLight);
         #ifdef SHADOW_AND_SKY
             float NdotL = clamp(dot(worldNormal, shadowDirection) + isTargetParticle, 0.0, 1.0);
             if (NdotL > 0.0) {
@@ -253,6 +253,7 @@ void main() {
         solidColor.rgb += snowFogScattering(skyColorUp, waterViewDepth, eyeBrightnessSmooth.y / 240.0);
     }
 
+    solidColor.w = float(gbufferData.materialID == MAT_HAND);
     texBuffer3 = solidColor;
 }
 

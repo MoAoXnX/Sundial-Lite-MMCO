@@ -34,8 +34,10 @@ vec2 getPrevCoord(inout vec3 prevWorldPos, vec3 viewPos, vec3 worldGeoNormal, fl
     vec3 prevViewPos;
     if (materialID == MAT_HAND) {
         prevViewPos = viewPos;
-        prevViewPos -= gbufferModelView[3].xyz * MC_HAND_DEPTH;
-        prevViewPos += gbufferPreviousModelView[3].xyz * MC_HAND_DEPTH;
+        #ifndef TEMPORAL_IGNORE_HAND_ANIMATION
+            prevViewPos -= gbufferModelView[3].xyz * MC_HAND_DEPTH;
+            prevViewPos += gbufferPreviousModelView[3].xyz * MC_HAND_DEPTH;
+        #endif
         vec3 prevViewNormal = mat3(gbufferModelView) * worldGeoNormal;
         prevViewPos -= parallaxOffset * prevViewPos / max(dot(prevViewPos, -prevViewNormal), 1e-5);
         prevScreenPos = viewToProjectionPos(prevViewPos);
@@ -93,7 +95,7 @@ vec4 samplePrevData(vec2 sampleTexelCoord, vec3 prevWorldPos, vec3 currNormal, v
     return vec4(prevSampleData);
 }
 
-vec4 prevSSILVB(vec2 prevCoord, vec3 prevWorldPos, vec3 currNormal, vec3 geoNormal, float materialID) {
+vec4 prevVisibilityBitmask(vec2 prevCoord, vec3 prevWorldPos, vec3 currNormal, vec3 geoNormal, float materialID) {
     vec2 sampleCoord = prevCoord;
     const float offset = 0.25;
     sampleCoord += prevTaaOffset * offset - taaOffset * 0.5 * offset;
@@ -165,7 +167,7 @@ void main() {
 
         vec3 prevWorldPos = worldPos;
         vec2 prevCoord = getPrevCoord(prevWorldPos, viewPos, worldGeoNormal, gbufferData.parallaxOffset, gbufferData.materialID);
-        prevData = prevSSILVB(prevCoord, prevWorldPos, worldNormal, worldGeoNormal, gbufferData.materialID);
+        prevData = prevVisibilityBitmask(prevCoord, prevWorldPos, worldNormal, worldGeoNormal, gbufferData.materialID);
     }
     texBuffer5 = prevData;
 }

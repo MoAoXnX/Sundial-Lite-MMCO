@@ -75,6 +75,8 @@ option.PARALLAX_MAX_REFINEMENTS=Parallax fineness
 option.PARALLAX_MAX_REFINEMENTS.comment=Improves parallax quality with Less performance cost. Does not improve the "pane edge" effect
 # Specular
 option.SUBSERFACE_SCATTERING_STRENTGH=Sub-surface scattering strength
+option.PBR_BRIGHTNESS=PBR brightness
+option.PBR_BRIGHTNESS.comment=Control brightness of PBR and hardcoded emissive objects
 option.SPECULAR_FORMAT=PBR format
 option.SPECULAR_EMISSIVE=PBR emissive
 option.SPECULAR_EMISSIVE.comment=Does not affect hardcoded emissive
@@ -306,12 +308,16 @@ option.DEPTH_OF_FIELD=Depth of field
 option.FOCUS_MODE=Focus mode
 value.FOCUS_MODE.0=Auto
 value.FOCUS_MODE.1=Manual
-option.APERTURE_CORROSION=Aperture corrosion
 option.HAND_DOF=Hand DoF
 option.HAND_DOF.comment=Blur hand in DoF (if not focusing near object)
+option.CORRECT_DOF_HAND_DEPTH=Correct hand depth in DoF
+option.CORRECT_DOF_HAND_DEPTH.comment=Only work if hand depth is on
 option.DOF_DEPTH_TEXTURE=DoF Depth Texture
 option.DOF_DEPTH_TEXTURE.comment=Depth texture used for DoF. depthtex0 contains transparent depth. depthtex1 does not contain transparent depth
 option.DOF_FOCUS_TEXTURE=DoF Focus Texture
+value.DOF_FOCUS_TEXTURE.0=depthtex0
+value.DOF_FOCUS_TEXTURE.1=depthtex1
+value.DOF_FOCUS_TEXTURE.2=depthtex2
 option.DOF_FOCUS_TEXTURE.comment=Depth texture used for DoF focusing only. depthtex0 contains transparent depth. depthtex1 does not contain transparent depth. depthtex2 does not contain hand depth
 option.COC_SPREAD_SAMPLES=Coc spread samples
 option.DOF_SAMPLES=Dof samples
@@ -328,6 +334,7 @@ option.LENS_DIAMETER_SCALE=Lens diameter scale
 option.LENS_DIAMETER_SCALE.comment=Affect aperture corrosion effect
 option.APERTURE_CORROSION_OFFSET=Aperture corrosion offset
 option.APERTURE_CORROSION_OFFSET.comment=Affect aperture corrosion effect. Set it too high may cause screen edge lost DoF effect
+option.APERTURE_CORROSION=Aperture corrosion
 # ChromaticDispersion
 option.CHROMATIC_DISPERSION_R=Red chromatic dispersion
 option.CHROMATIC_DISPERSION_R.comment=Higher value will move red to the outside of screen
@@ -356,6 +363,8 @@ option.MOD_WATER_DETECTION=Mod water detection
 option.MOD_WATER_DETECTION.comment=Assuming all transparent block with vertex color to be water. May cause unexpected faces to be water
 option.MOD_PLANT_DETECTION=Mod plant detection
 option.MOD_PLANT_DETECTION.comment=Assuming all slope not hardcoded to be plant. May cause unexpected faces to be plant
+option.TEMPORAL_IGNORE_HAND_ANIMATION=Temporal ignore hand animation
+option.TEMPORAL_IGNORE_HAND_ANIMATION.comment=Ignore hand animation of view bobbing in temporal. Might improve visual quality on mod held item with custom animation
 
 # Experimental
 option.AUTHOR=Author

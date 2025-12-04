@@ -2,4 +2,4 @@
 
 #define SHADOW_AND_SKY
 
-#include "/programs/gbuffers/Weather.frag"
+#include "/programs/gbuffers/Shadow.frag"

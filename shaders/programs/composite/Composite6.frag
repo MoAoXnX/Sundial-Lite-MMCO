@@ -184,7 +184,7 @@ void main() {
     float weatherLightData = abs(weatherData);
     if (weatherLightData > 0.3) {
         float sunlightStrength = 2.0 * weatherLightData - 1.0;
-        float basicSunlight = (1.0 - sqrt(0)) * 8.0 * SUNLIGHT_BRIGHTNESS;
+        float basicSunlight = 8.0 * SUNLIGHT_BRIGHTNESS - 8.0 * SUNLIGHT_BRIGHTNESS * sqrt(weatherStrength) * SUNLIGHTINRAIN;
         vec3 weatherLight = sunlightStrength * basicSunlight * sunColor + skyColorUp * 1.5;
         float weatherBlendWeight = clamp(weatherData * 1e+10, 0.0, 1.0) * 0.8 + 0.2;
         solidColor.rgb = mix(solidColor.rgb, weatherLight, weatherBlendWeight);

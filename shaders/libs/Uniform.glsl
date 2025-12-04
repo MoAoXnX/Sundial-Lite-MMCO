@@ -1,5 +1,6 @@
 uniform int frameCounter;
 uniform int isEyeInWater;
+uniform int heldBlockLightValue;
 uniform float far;
 uniform float blindness;
 uniform float frameTime;
@@ -22,6 +23,7 @@ uniform vec3 sunlightColor;
 uniform vec3 cameraPosition;
 uniform vec3 cameraMovement;
 uniform vec3 shadowDirection;
+uniform vec3 relativeEyePosition;
 uniform vec3 shadowModelViewProj0;
 uniform vec3 shadowModelViewProj1;
 uniform vec3 shadowModelViewProj2;

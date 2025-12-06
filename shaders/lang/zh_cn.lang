@@ -22,6 +22,7 @@ screen.VolumetricLight=体积光
 screen.VolumetricFog=体积雾
 screen.VolumetricFog.comment=体积雾集成在体积光中. 体积雾的采样数与体积光相同. 关闭体积光会一起关闭体积雾
 screen.CommonFog=普通雾气
+screen.END_FOG_COLOR=末地雾颜色
 screen.Cloud=云
 screen.BlockyCloud=方块云
 screen.PlaneCloud=平面云
@@ -230,6 +231,10 @@ option.END_FOG_BRIGHTNESS=末地雾亮度
 option.END_FOG_BRIGHTNESS.comment=影响末地雾气的亮度
 option.END_GALAXY_AMOUNT=末地星星数量
 option.END_GALAXY_BRIGHTNESS=末地星星亮度
+option.END_FOG_COLOR_R=雾_红
+option.END_FOG_COLOR_G=雾_绿
+option.END_FOG_COLOR_B=雾_蓝
+option.END_ENVIROMENT_BRIGHTNESS=末地环境光亮度
 
 # Cloud
 option.CLOUD_TYPE=云朵类型

@@ -17,6 +17,7 @@ screen.VolumetricLight=Volumetric light
 screen.VolumetricFog=Volumetric fog
 screen.VolumetricFog.comment=Volumetric fog is a part of volumetric light. VF sample count is same as VL. Disable VL will disable VF too
 screen.CommonFog=Common fog
+screen.END_FOG_COLOR=End_Fog_Color
 screen.Cloud=Cloud
 screen.BlockyCloud=Blocky cloud
 screen.PlaneCloud=Plane cloud
@@ -207,6 +208,10 @@ option.END_FOG_DENSITY=The end fog density
 option.END_FOG_BRIGHTNESS=The end fog brightness
 option.END_GALAXY_AMOUNT=The end galaxy amount
 option.END_GALAXY_BRIGHTNESS=The end galaxy brightness
+option.END_FOG_COLOR_R=Fog_Red
+option.END_FOG_COLOR_G=Fog_Blue
+option.END_FOG_COLOR_B=Fog_Green
+option.END_ENVIROMENT_BRIGHTNESS=End_Enviroment_Brightness
 
 # Cloud
 option.CLOUD_TYPE=Cloud type
